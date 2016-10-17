@@ -160,8 +160,8 @@ def get_logit_coef(X, y, cols=None):
 
 if __name__ == '__main__':
     # Load train and test data
-    train = pd.read_csv('train.csv')
-    test = pd.read_csv('test.csv')
+    train = pd.read_csv('data/train.csv')
+    test = pd.read_csv('data/test.csv')
 
     # Separate features and labels
     X = train.copy()
@@ -185,21 +185,21 @@ if __name__ == '__main__':
     X = categorical_dummies(X, 'Pclass', 'Sex', 'Cabin', 'Embarked')
     X_test = categorical_dummies(X_test, 'Pclass', 'Sex', 'Cabin', 'Embarked')
 
-    # clf = RandomForestClassifier(n_estimators=250)
-    # importances = feature_importances(clf, X, y)
-    # select = list(importances['feature'][:15])
+    clf = RandomForestClassifier(n_estimators=1000, oob_score=True)
+    importances = feature_importances(clf, X, y)
+    select = list(importances['feature'][:15])
     # plot_feature_importances(importances)
 
-    selector = SelectKBest(chi2, k=15).fit(X, y)
-    cols = list(X.columns.values[selector.get_support()])
+    # selector = SelectKBest(chi2, k=15).fit(X, y)
+    # cols = list(X.columns.values[selector.get_support()])
 
     # Split training data and holdout data
     X_train, X_val, y_train, y_val = train_test_split(X, y)
 
     models = Estimators()
-    models.train(X_train[cols], y_train)
+    models.train(X_train[select], y_train)
     # models.cv_train_accuracy()
-    models.predict(X_val[cols])
+    models.predict(X_val[select])
     models.test_accuracy(y_val)
 
     # models_features = Estimators()
@@ -207,10 +207,10 @@ if __name__ == '__main__':
     # features = models_features.select_features()
 
     scaler = preprocessing.StandardScaler()
-    X_scaled = scaler.fit_transform(X[cols])
+    X_scaled = scaler.fit_transform(X[select])
 
     output = pd.DataFrame(X_test.pop('PassengerId'))
-    X_test_scaled = scaler.transform(X_test[cols])
+    X_test_scaled = scaler.transform(X_test[select])
 
     gb_params = {'learning_rate': [0.1, 0.05, 0.02, 0.01],
                  'max_depth': [1, 2, 3],
